@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     volVectorField U0("U0",U);
     Info<< "\nStarting time loop\n" << endl;
 
-    #include "readInjectionSteadyState.H" 	
+    #include "readInjectionSteadyState.H"
 
     while (runTime.run())
     {
@@ -139,9 +139,9 @@ int main(int argc, char *argv[])
         #include "CourantNo.H"
         #include "setDeltaT.H"
 	
-	countTimeStep++;
+	    countTimeStep++;
         ++runTime;
-
+        
         Info<< "Time = "   << runTime.timeName() << nl << endl;
 	    Info<< "counter = "<< countTimeStep << endl; 
 	
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
       		        U0[cellI] = U[cellI];  
 	            }  
 	       }
-                // Compare U0 with U 150 dt later		
+           // Compare U0 with U 150 dt later		
            if ( countTimeStep == secCountTimeStep*100 + 150)
            {
                 forAll(U,cellI) // loop over cell
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
         }
         else // steady state condition => add particle inside 
         {
-	      Info << "VICTOIRE " << endl;
+            
               Info << "\n Evolving " << kinematicCloud.name() <<endl; // evolving
               kinematicCloud.evolve();
         }

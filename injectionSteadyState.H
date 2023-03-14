@@ -42,17 +42,20 @@ IOdictionary kinematicCloudProperties // update dictionary => change the SOI
 	 	IOobject::AUTO_WRITE   
     )
 );
+
 dictionary& subDictKinematicCloud = kinematicCloudProperties.subDict("subModels").subDict("injectionModels").subDict("topInjection");
 scalar tau = L.value()*R.value()*R.value()/( 2.*rInj.value()*rInj.value()*velInitial.value() );
 
-if (runTime.value() > tau) // If we've already launched a simulation and the inital time > 2.tau => injected after 0.1tau
+if (runTime.value() > tau) // If we've already launched a simulation => injection if t > tau
 {
-	subDictKinematicCloud.set("SOI", 0.01*tau + runTime.value()); // injection after 
+	subDictKinematicCloud.set("SOI", runTime.value() + 0.01*tau ); 
+	// injection after 10 dt => rentre dans la run loop
 }
-else //If note : injected the particles after 5tau ! 
+else  //If not (tau>t) => injection at t = tau 
 {
-	subDictKinematicCloud.set("SOI", 0.1*tau + runTime.value() ); // injection after 	
+	subDictKinematicCloud.set("SOI", tau ); // injection after 	
 }
+
 kinematicCloudProperties.regIOobject::write();
 Info << " Constructing kinematicCloud "  << kinematicCloudName << endl;
 basicKinematicCollidingCloud kinematicCloud
@@ -63,6 +66,12 @@ basicKinematicCollidingCloud kinematicCloud
 	mu,
 	g
 );
+
+scalar SOI = subDictKinematicCloud.lookup("SOI"); 
+
+
+
+
 
 
 

@@ -63,6 +63,7 @@ Info<<"Reading velInitial\n" << endl;
 dimensionedScalar velInitial ("velInitial",dimVelocity,geometryProperties);
 
 #include "createPhi.H"
+
 label pRefCell = 0;
 scalar pRefValue = 0.0;
 setRefCell(p, pimple.dict(), pRefCell, pRefValue);

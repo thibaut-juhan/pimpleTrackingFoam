@@ -99,6 +99,7 @@ class Cloud
         void writeCloudUniformProperties() const;
 
 
+
 protected:
 
         //- Geometry type
@@ -179,6 +180,7 @@ public:
 
         using IDLList<ParticleType>::begin;
         using IDLList<ParticleType>::cbegin;
+
         using IDLList<ParticleType>::end;
         using IDLList<ParticleType>::cend;
 
@@ -197,11 +199,11 @@ public:
             //- Remove lost particles from cloud and delete
             void deleteLostParticles();
 
-            //- Reinjection of particles deleted
-          //  void reinjectionParticles();
-
             //- Reset the particles
             void cloudReset(const Cloud<ParticleType>& c);
+
+            //- Reinjection of particles (test position (x,y,z) =(0,0,0))
+            void reinjectionParticles();
 
             //- Move the particles
             template<class TrackCloudType>
