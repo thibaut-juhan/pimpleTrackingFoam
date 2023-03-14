@@ -61,6 +61,12 @@ Info<<"Reading L \n" << endl;
 dimensionedScalar L ("L",dimLength,geometryProperties);
 Info<<"Reading velInitial\n" << endl;
 dimensionedScalar velInitial ("velInitial",dimVelocity,geometryProperties);
+Info << "Reading injector centers" << endl;
+dimensionedScalar xC1 ("xC1",dimLength,geometryProperties);
+dimensionedScalar xC2 ("xC2",dimLength,geometryProperties);
+dimensionedScalar yC1 ("yC1",dimLength,geometryProperties);
+dimensionedScalar yC2 ("yC2",dimLength,geometryProperties);
+
 
 #include "createPhi.H"
 

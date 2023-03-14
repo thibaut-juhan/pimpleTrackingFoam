@@ -98,7 +98,6 @@ Foam::Cloud<ParticleType>::Cloud
     }
 }
 
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class ParticleType>
@@ -117,14 +116,10 @@ void Foam::Cloud<ParticleType>::deleteParticle(ParticleType& p)
 template <class ParticleType>
 void Foam::Cloud<ParticleType>::reinjectionParticles()
 {
-    for (ParticleType &p : *this)
-    {
-        if (p.cell() == -1)
-        {
-            WarningInFunction << "Reinjection of particle at initial position" <<endl;
-            p.reset();
-        }
-    }
+    // create a new particle from this position : 
+   // p.position().x() = 0.;
+   // p.position().y() = 0.;
+   // p.position().z() = 1e-5;
 }
 */
 
@@ -268,7 +263,7 @@ void Foam::Cloud<ParticleType>::move
             }
             else
             {
-                deleteParticle(p);
+                deleteParticle(p); // delete particle from clouds
             }
         }
 
@@ -297,7 +292,6 @@ void Foam::Cloud<ParticleType>::move
                     << particleTransferLists[i];
             }
         }
-
 
         // Start sending. Sets number of bytes transferred
         labelList allNTrans(Pstream::nProcs());
@@ -339,7 +333,6 @@ void Foam::Cloud<ParticleType>::move
                 );
 
                 label pI = 0;
-
                 for (ParticleType& newp : newParticles)
                 {
                     label patchi = procPatches[receivePatchIndex[pI++]];
@@ -352,7 +345,6 @@ void Foam::Cloud<ParticleType>::move
         }
     }
 }
-
 
 template<class ParticleType>
 void Foam::Cloud<ParticleType>::autoMap(const mapPolyMesh& mapper)

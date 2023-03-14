@@ -112,17 +112,16 @@ void Foam::Cloud<ParticleType>::deleteParticle(ParticleType& p)
 {
     delete(this->remove(&p));
 }
-
+/*
 template <class ParticleType>
 void Foam::Cloud<ParticleType>::reinjectionParticles()
 {
-    // test position
-    p.position.x()= 0.0;
-    p.position.y()= 0.0;
-    p.position.z()= 0.0;
-
+    // create a new particle from this position : 
+   // p.position().x() = 0.;
+   // p.position().y() = 0.;
+   // p.position().z() = 1e-5;
 }
-
+*/
 
 template<class ParticleType>
   void Foam::Cloud<ParticleType>::deleteLostParticles()
@@ -214,6 +213,7 @@ void Foam::Cloud<ParticleType>::move
         {
             patchIndexTransferLists[i].clear();
         }
+
         // Loop over all particles
         for (ParticleType& p : *this)
         {
@@ -263,8 +263,7 @@ void Foam::Cloud<ParticleType>::move
             }
             else
             {
-                // deleteParticle(p);
-                reinjectionParticles();
+                deleteParticle(p); // delete particle from clouds
             }
         }
 
@@ -334,7 +333,6 @@ void Foam::Cloud<ParticleType>::move
                 );
 
                 label pI = 0;
-
                 for (ParticleType& newp : newParticles)
                 {
                     label patchi = procPatches[receivePatchIndex[pI++]];

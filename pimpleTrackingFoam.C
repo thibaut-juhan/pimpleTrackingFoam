@@ -125,27 +125,81 @@ int main(int argc, char *argv[])
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     bool convergeCheck = false;
-    int    countTimeStep(0);     // timestep counter
-    int    secCountTimeStep(1); //  second timeStep counter 
+    int  countTimeStep(0);     // timestep counter
+    int  secCountTimeStep(1); //  second timeStep counter 
    
     volVectorField U0("U0",U);
+
+    // write a dictionnary which contains cell coordinate where  U==Umax
+    IOdictionary uMaxCell
+    (
+     	IOobject
+    	 (
+     		"uMaxCell", // name of the dictionnary
+		runTime.constant(), // save in runTime.constant()
+		mesh,
+		IOobject::NO_READ, // no read mode
+		IOobject::AUTO_WRITE // auto write mdoe
+     	 )
+    ); 
+
+    label cellCount = 0;
+    List<label>  listCellCount;     // label list of cell
+    List<vector> listVectorPosCell; // vector list of cell
+
+    // find the label of cell which corresponds to the if-statement:
+    forAll(mesh.C(),cellI)
+    {
+	scalar xC      = mesh.C()[cellI].component(0);
+	scalar yC      = mesh.C()[cellI].component(1);
+	scalar zC      = mesh.C()[cellI].component(2);	  
+
+        scalar R1      = (xC-xC1.value())*(xC-xC1.value()) + (yC-yC1.value())*(yC-yC1.value());
+        scalar R2      = (xC-xC2.value())*(xC-xC2.value()) + (yC-yC2.value())*(yC-yC2.value());	
+	cellCount++;
+
+	// compute the radial coordinate of cell	
+	if( ( R1 < R.value()*R.value() || R2 < R.value()*R.value() ) && (zC < L.value()/10.) )
+   	{
+		listCellCount.append(cellCount);
+	}
+    }
+
+    // fill the vector list => (xC,yC,zC)
+    forAll(listCellCount,i)
+    {
+	scalar xC      = mesh.C()[i].component(0);
+	scalar yC      = mesh.C()[i].component(1);
+	scalar zC      = mesh.C()[i].component(2);	  	
+	listVectorPosCell.append( vector (xC,yC,zC) );
+    }
+
+    // fill the dictionnary w/ the list of vector(xC,yC,zC) : 
+    
+    uMaxCell.set("",listVectorPosCell);
+    uMaxCell.regIOobject::write();
+    
+    scalar massInside;
+    scalar massInsideTemp;
+
+    label nParcelsInsideTemp;
+    label nParcelsInside;
+
     Info<< "\nStarting time loop\n" << endl;
-
-    #include "readInjectionSteadyState.H"
-
+    #include "injectionSteadyState.H"
     while (runTime.run())
     {
         #include "readDyMControls.H"
         #include "CourantNo.H"
         #include "setDeltaT.H"
 	
-	    countTimeStep++;
+	countTimeStep++;
         ++runTime;
         
         Info<< "Time = "   << runTime.timeName() << nl << endl;
-	    Info<< "counter = "<< countTimeStep << endl; 
+	Info<< "counter = "<< countTimeStep << endl; 
 	
-	    if (convergeCheck == false)
+	if (convergeCheck == false)
         {
            // --- Pressure-velocity PIMPLE corrector loop
            while (pimple.loop())
@@ -203,6 +257,7 @@ int main(int argc, char *argv[])
                 {
                     maxDifference[cellI] = mag ( U[cellI] - U0[cellI] );      
                 }
+
                 Info<< "second counter = " << secCountTimeStep << endl;
                 convergeCheck = isConverged( maxDifference,1.e-2); 
                 // check convergence and inject particles inside the domain in 10 dt later	   
@@ -211,14 +266,34 @@ int main(int argc, char *argv[])
         }
         else // steady state condition => add particle inside 
         {
-            
-              Info << "\n Evolving " << kinematicCloud.name() <<endl; // evolving
-              kinematicCloud.evolve();
-        }
+		
+	      nParcelsInsideTemp = kinematicCloud.nParcels();     // number of parcels inside the domain      
+              massInsideTemp     = kinematicCloud.massInSystem(); // mass inside the system before evolve
+             
+	      Info << "\n Evolving " << kinematicCloud.name() <<endl; // evolving
+              kinematicCloud.evolve(); // compute the number of particle outside		
+             
+	      // mass + nParcels after evolving : 
+	      massInside     = kinematicCloud.massInSystem();
+	      nParcelsInside = kinematicCloud.nParcels();
+	     
+	      if( mag(massInsideTemp - massInside) != 0) // particle outside => injection
+	      {
+		// number of particle outised :
+		label particlesOutside =  mag(nParcelsInside - nParcelsInsideTemp);
+		// according the number of particlesOutside => create a position for each particles
+		// define the position : 	
+
+	//	basicKinematicCollidingCloud *newParticles = new basicKinematicCollidingCloud; // new particle(s) => create a pointer 		
+	     	
+	      }	      
+	      
+	}
 
         runTime.write();
         runTime.printExecutionTime(Info);
     }
+
 
     Info<< "End\n" << endl;
 

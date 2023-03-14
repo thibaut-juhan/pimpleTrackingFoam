@@ -26,11 +26,13 @@ volScalarField mu
 
 	laminarTransport.nu() * rhoInfValue
 );
+
 // add trackingParticles: 
 const word kinematicCloudName // cloudName
 (
 	args.getOrDefault<word>("cloudName","kinematicCloud")
 );
+
 IOdictionary kinematicCloudProperties // update dictionary => change the SOI
 (
     IOobject
@@ -55,8 +57,10 @@ else  //If not (tau>t) => injection at t = tau
 {
 	subDictKinematicCloud.set("SOI", tau ); // injection after 	
 }
+scalar SOI = readScalar(subDictKinematicCloud.lookup("SOI")); 
 
-kinematicCloudProperties.regIOobject::write();
+kinematicCloudProperties.regIOobject::write(); // write on kinematicCloudProperties
+
 Info << " Constructing kinematicCloud "  << kinematicCloudName << endl;
 basicKinematicCollidingCloud kinematicCloud
 (
@@ -67,7 +71,6 @@ basicKinematicCollidingCloud kinematicCloud
 	g
 );
 
-scalar SOI = subDictKinematicCloud.lookup("SOI"); 
 
 
 

@@ -1069,7 +1069,7 @@ $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/createFvOptions.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/createUfIfPresent.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/CourantNo.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/setInitialDeltaT.H \
-readInjectionSteadyState.H \
+injectionSteadyState.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/readGravitationalAcceleration.H \
 $(WM_PROJECT_DIR)/src/dynamicFvMesh/lnInclude/readDyMControls.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/readTimeControls.H \
