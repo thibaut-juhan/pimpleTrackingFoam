@@ -539,6 +539,14 @@ public:
 
 
         // Check
+	
+            //- Number of parcels inside the domain
+
+	    inline label nTotParcels() const
+	    {
+		label nTot = returnReduce( this->size(),sumOp<label>() );
+		return nTot;
+	    }
 
             //- Total number of parcels
             virtual label nParcels() const

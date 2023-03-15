@@ -81,6 +81,7 @@ Note
 #include "pimpleControl.H"
 #include "CorrectPhi.H"
 #include "fvOptions.H"
+// #include "Random.H"
 #include "basicKinematicCollidingCloud.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -107,7 +108,6 @@ int main(int argc, char *argv[])
         "Transient solver for incompressible, turbulent flow"
         " of Newtonian fluids on a moving mesh."
     );
-
     #include "postProcess.H" 	
     #include "addCheckCaseOptions.H"
     #include "setRootCaseLists.H"
@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
+
     turbulence->validate();
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -130,41 +131,27 @@ int main(int argc, char *argv[])
    
     volVectorField U0("U0",U);
 
-    // write a dictionnary which contains cell coordinate where  U==Umax
-    IOdictionary uMaxCell
-    (
-     	IOobject
-    	 (
-     		"uMaxCell", // name of the dictionnary
-		runTime.constant(), // save in runTime.constant()
-		mesh,
-		IOobject::NO_READ, // no read mode
-		IOobject::AUTO_WRITE // auto write mdoe
-     	 )
-    ); 
-
     label cellCount = 0;
     List<label>  listCellCount;     // label list of cell
     List<vector> listVectorPosCell; // vector list of cell
 
+    #include "injectionSteadyState.H"
+
     // find the label of cell which corresponds to the if-statement:
     forAll(mesh.C(),cellI)
     {
-	scalar xC      = mesh.C()[cellI].component(0);
-	scalar yC      = mesh.C()[cellI].component(1);
-	scalar zC      = mesh.C()[cellI].component(2);	  
-
-        scalar R1      = (xC-xC1.value())*(xC-xC1.value()) + (yC-yC1.value())*(yC-yC1.value());
-        scalar R2      = (xC-xC2.value())*(xC-xC2.value()) + (yC-yC2.value())*(yC-yC2.value());	
-	cellCount++;
-
-	// compute the radial coordinate of cell	
-	if( ( R1 < R.value()*R.value() || R2 < R.value()*R.value() ) && (zC < L.value()/10.) )
-   	{
-		listCellCount.append(cellCount);
-	}
+	    scalar xC      = mesh.C()[cellI].component(0);
+	    scalar yC      = mesh.C()[cellI].component(1);
+	    scalar zC      = mesh.C()[cellI].component(2);	  
+            scalar R1      = (xC-xC1.value())*(xC-xC1.value()) + (yC-yC1.value())*(yC-yC1.value());
+            scalar R2      = (xC-xC2.value())*(xC-xC2.value()) + (yC-yC2.value())*(yC-yC2.value());	
+	    cellCount++;
+	    // compute the radial coordinate of cell	
+	    if( ( R1 < R.value()*R.value() || R2 < R.value()*R.value() ) && (zC < L.value()/10.) )
+   	    {
+    		listCellCount.append(cellCount); // append the list of cell
+	    }
     }
-
     // fill the vector list => (xC,yC,zC)
     forAll(listCellCount,i)
     {
@@ -172,13 +159,17 @@ int main(int argc, char *argv[])
 	scalar yC      = mesh.C()[i].component(1);
 	scalar zC      = mesh.C()[i].component(2);	  	
 	listVectorPosCell.append( vector (xC,yC,zC) );
+
     }
 
-    // fill the dictionnary w/ the list of vector(xC,yC,zC) : 
-    
+    // create the dictionnary will be filled during the reinjection process : 
+    scalar numbProc = UPstream::myProcNo();
+    Random randObj; 
+    /*
     uMaxCell.set("",listVectorPosCell);
     uMaxCell.regIOobject::write();
-    
+    */
+
     scalar massInside;
     scalar massInsideTemp;
 
@@ -186,7 +177,7 @@ int main(int argc, char *argv[])
     label nParcelsInside;
 
     Info<< "\nStarting time loop\n" << endl;
-    #include "injectionSteadyState.H"
+   
     while (runTime.run())
     {
         #include "readDyMControls.H"
@@ -241,7 +232,8 @@ int main(int argc, char *argv[])
                    laminarTransport.correct();
                    turbulence->correct();
                }
-           }	
+           }
+
            // Stored the time every 100 timeStep:
 	       if( countTimeStep%100 == 0) 
 	       {  
@@ -250,8 +242,9 @@ int main(int argc, char *argv[])
       		        U0[cellI] = U[cellI];  
 	            }  
 	       }
+
            // Compare U0 with U 150 dt later		
-           if ( countTimeStep == secCountTimeStep*100 + 150)
+           if ( countTimeStep == secCountTimeStep*100 + 150 )
            {
                 forAll(U,cellI) // loop over cell
                 {
@@ -266,34 +259,46 @@ int main(int argc, char *argv[])
         }
         else // steady state condition => add particle inside 
         {
-		
-	      nParcelsInsideTemp = kinematicCloud.nParcels();     // number of parcels inside the domain      
-              massInsideTemp     = kinematicCloud.massInSystem(); // mass inside the system before evolve
-             
-	      Info << "\n Evolving " << kinematicCloud.name() <<endl; // evolving
-              kinematicCloud.evolve(); // compute the number of particle outside		
-             
-	      // mass + nParcels after evolving : 
-	      massInside     = kinematicCloud.massInSystem();
-	      nParcelsInside = kinematicCloud.nParcels();
-	     
-	      if( mag(massInsideTemp - massInside) != 0) // particle outside => injection
-	      {
-		// number of particle outised :
-		label particlesOutside =  mag(nParcelsInside - nParcelsInsideTemp);
-		// according the number of particlesOutside => create a position for each particles
-		// define the position : 	
 
-	//	basicKinematicCollidingCloud *newParticles = new basicKinematicCollidingCloud; // new particle(s) => create a pointer 		
-	     	
-	      }	      
-	      
-	}
+	    Random randObj;
+	    // kinematicCloud state before evolving
+	    nParcelsInsideTemp     = kinematicCloud.nTotParcels();     // number of parcels inside the domain      
+            massInsideTemp         = kinematicCloud.massInSystem(); // mass inside the system before evolve    
+	    Info << "parcels inside (before evolving) : " << nParcelsInsideTemp << endl;
+	    // kinematicCloud state after evolving
+	    kinematicCloud.evolve(); // compute the number of particle outside		
+	    // mass + nParcels after evolving :
+	    massInside             = kinematicCloud.massInSystem();
+	    nParcelsInside         = kinematicCloud.nTotParcels();
+            label nParcelsOutside  = mag( nParcelsInsideTemp - nParcelsInside ); // parcel number outside 
+	    Info << "parcels inside : " << nParcelsInside << endl;
+	    if(nParcelsOutside != 0)
+            {
+                // loop over parcel outside the domain
+                for (int nI ; nI < nParcelsOutside; nI++)
+                {
+		    if(listCellCount.size() !=0) 
+		    {
+			label randList = randObj.position( 0,listVectorPosCell.size() );
+	    		Info << "rand Cell   "<< listCellCount[randList] << endl;		
+			Info << "rand Vector "<< listVectorPosCell[randList] << endl;
+
+			// add particles inside the cloud => addParticle(parceltype *ptr)
+		    }
+
+		    // Call constructor of particle => from vector position + cell label
+   		    // Need to add the good template => CollidingParcel > KinematicParcel > particle  
+
+	   	    // Info << listVectorPosCell [randPosListVector]  << endl;
+	            // Info << listCellCount     [randPosListVector]  << endl;
+                }
+            }
+
+	    }
 
         runTime.write();
         runTime.printExecutionTime(Info);
     }
-
 
     Info<< "End\n" << endl;
 
