@@ -279,9 +279,9 @@ int main(int argc, char *argv[])
                 {
 		    if(listCellCount.size() !=0) 
 		    {
-			label randList = randObj.position( 0,listVectorPosCell.size() );
-	    		Info << "rand Cell   "<< listCellCount[randList] << endl;		
-			Info << "rand Vector "<< listVectorPosCell[randList] << endl;
+			    label randList = randObj.position( 0,listVectorPosCell.size() );
+	    	    Info << "rand Cell   "<< listCellCount[randList] << endl;		
+			    Info << "rand Vector "<< listVectorPosCell[randList] << endl;
 
 			// add particles inside the cloud => addParticle(parceltype *ptr)
 		    }

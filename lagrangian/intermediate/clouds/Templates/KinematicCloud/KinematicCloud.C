@@ -791,7 +791,7 @@ void Foam::KinematicCloud<CloudType>::motion
 )
 {
     td.part() = parcelType::trackingData::tpLinearTrack;
-    CloudType::move(cloud, td, solution_.trackTime());
+    CloudType::move( cloud, td, solution_.trackTime() );
 
     if (isotropyModel_->active())
     {

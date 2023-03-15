@@ -263,7 +263,10 @@ void Foam::Cloud<ParticleType>::move
             }
             else
             {
-                deleteParticle(p); // delete particle from clouds
+                p.position().x() = 0.;
+                p.position().y() = 0.;
+                p.position().z() = 0.0003;
+
             }
         }
 
